@@ -623,18 +623,18 @@ namespace RTC
 			return;
 		}
 
-		// Verify that the packet's tuple matches our tuple.
-		if (!this->tuple->Compare(tuple))
-		{
-			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
+		// // Verify that the packet's tuple matches our tuple.
+		// if (!this->tuple->Compare(tuple))
+		// {
+		// 	MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
 
-			// Remove this SSRC.
-			RecvStreamClosed(packet->GetSsrc());
+		// 	// Remove this SSRC.
+		// 	RecvStreamClosed(packet->GetSsrc());
 
-			delete packet;
+		// 	delete packet;
 
-			return;
-		}
+		// 	return;
+		// }
 
 		// Pass the packet to the parent transport.
 		RTC::Transport::ReceiveRtpPacket(packet);
@@ -656,13 +656,13 @@ namespace RTC
 			return;
 		}
 
-		// Verify that the packet's tuple matches our tuple.
-		if (!this->tuple->Compare(tuple))
-		{
-			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+		// // Verify that the packet's tuple matches our tuple.
+		// if (!this->tuple->Compare(tuple))
+		// {
+		// 	MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
 
-			return;
-		}
+		// 	return;
+		// }
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, static_cast<size_t>(intLen));
 
@@ -686,12 +686,12 @@ namespace RTC
 			return;
 
 		// Verify that the packet's tuple matches our tuple.
-		if (!this->tuple->Compare(tuple))
-		{
-			MS_DEBUG_TAG(sctp, "ignoring SCTP packet from unknown IP:port");
+		// if (!this->tuple->Compare(tuple))
+		// {
+		// 	MS_DEBUG_TAG(sctp, "ignoring SCTP packet from unknown IP:port");
 
-			return;
-		}
+		// 	return;
+		// }
 
 		// Pass it to the parent transport.
 		RTC::Transport::ReceiveSctpData(data, len);
