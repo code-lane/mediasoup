@@ -28,8 +28,8 @@ use crate::worker::{WorkerDump, WorkerUpdateSettings};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::net::IpAddr;
 use std::num::NonZeroU16;
 
@@ -90,10 +90,18 @@ pub(crate) struct DataConsumerInternal {
 pub(crate) trait Request: Debug + Serialize {
     type Response: DeserializeOwned;
 
+    /// Request method to call on worker.
     fn as_method(&self) -> &'static str;
+
+    /// Default response to return in case of soft error, such as channel already closed, entity
+    /// doesn't exist on worker during closing.
+    fn default_for_soft_error() -> Option<Self::Response> {
+        None
+    }
 }
 
 pub(crate) trait Notification: Debug + Serialize {
+    /// Request event to call on worker.
     fn as_event(&self) -> &'static str;
 }
 
@@ -101,7 +109,8 @@ macro_rules! request_response {
     (
         $method: literal,
         $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty$(,)? )* },
-        $existing_response_type: ty $(,)?
+        $existing_response_type: ty,
+        $default_for_soft_error: expr $(,)?
     ) => {
         #[derive(Debug, Serialize)]
         pub(crate) struct $request_struct_name {
@@ -114,14 +123,36 @@ macro_rules! request_response {
             fn as_method(&self) -> &'static str {
                 $method
             }
+
+            fn default_for_soft_error() -> Option<Self::Response> {
+                $default_for_soft_error
+            }
         }
+    };
+    // Call above macro with no default for soft error
+    (
+        $method: literal,
+        $request_struct_name: ident $request_struct_impl: tt $(,)?
+        $existing_response_type: ty $(,)?
+    ) => {
+        request_response!(
+            $method,
+            $request_struct_name $request_struct_impl,
+            $existing_response_type,
+            None,
+        );
     };
     // Call above macro with unit type as expected response
     (
         $method: literal,
         $request_struct_name: ident $request_struct_impl: tt $(,)?
     ) => {
-        request_response!($method, $request_struct_name $request_struct_impl, ());
+        request_response!(
+            $method,
+            $request_struct_name $request_struct_impl,
+            (),
+            None,
+        );
     };
     (
         $method: literal,
@@ -141,32 +172,6 @@ macro_rules! request_response {
 
         impl Request for $request_struct_name {
             type Response = $response_struct_name;
-
-            fn as_method(&self) -> &'static str {
-                $method
-            }
-        }
-    };
-}
-
-macro_rules! request_response_generic {
-    (
-        $method: literal,
-        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty$(,)? )* },
-        $generic_response: ident,
-    ) => {
-        #[derive(Debug, Serialize)]
-        pub(crate) struct $request_struct_name<$generic_response>
-        where
-            $generic_response: Debug + DeserializeOwned,
-        {
-            $( pub(crate) $request_field_name: $request_field_type, )*
-            #[serde(skip)]
-            pub(crate) phantom_data: PhantomData<$generic_response>,
-        }
-
-        impl<$generic_response: Debug + DeserializeOwned> Request for $request_struct_name<$generic_response> {
-            type Response = $generic_response;
 
             fn as_method(&self) -> &'static str {
                 $method
@@ -198,6 +203,8 @@ request_response!(
     RouterCloseRequest {
         internal: RouterInternal,
     },
+    (),
+    Some(()),
 );
 
 request_response!(
@@ -333,8 +340,9 @@ request_response!(
         data: RouterCreatePlainTransportData,
     },
     PlainTransportData {
-        rtcp_mux: bool,
-        comedia: bool,
+        // The following fields are present, but unused
+        // rtcp_mux: bool,
+        // comedia: bool,
         tuple: Mutex<TransportTuple>,
         rtcp_tuple: Mutex<Option<TransportTuple>>,
         sctp_parameters: Option<SctpParameters>,
@@ -444,22 +452,24 @@ request_response!(
     TransportCloseRequest {
         internal: TransportInternal,
     },
+    (),
+    Some(()),
 );
 
-request_response_generic!(
+request_response!(
     "transport.dump",
     TransportDumpRequest {
         internal: TransportInternal,
     },
-    Dump,
+    Value,
 );
 
-request_response_generic!(
+request_response!(
     "transport.getStats",
     TransportGetStatsRequest {
         internal: TransportInternal,
     },
-    Stats,
+    Value,
 );
 
 #[derive(Debug, Serialize)]
@@ -470,7 +480,7 @@ pub(crate) struct TransportConnectRequestWebRtcData {
 
 request_response!(
     "transport.connect",
-    TransportConnectRequestWebRtc {
+    TransportConnectWebRtcRequest {
         internal: TransportInternal,
         data: TransportConnectRequestWebRtcData,
     },
@@ -490,7 +500,7 @@ pub(crate) struct TransportConnectRequestPipeData {
 
 request_response!(
     "transport.connect",
-    TransportConnectRequestPipe {
+    TransportConnectPipeRequest {
         internal: TransportInternal,
         data: TransportConnectRequestPipeData,
     },
@@ -514,7 +524,7 @@ pub(crate) struct TransportConnectRequestPlainData {
 
 request_response!(
     "transport.connect",
-    TransportConnectRequestPlain {
+    TransportConnectPlainRequest {
         internal: TransportInternal,
         data: TransportConnectRequestPlainData,
     },
@@ -687,6 +697,8 @@ request_response!(
     ProducerCloseRequest {
         internal: ProducerInternal,
     },
+    (),
+    Some(()),
 );
 
 request_response!(
@@ -749,6 +761,8 @@ request_response!(
     ConsumerCloseRequest {
         internal: ConsumerInternal,
     },
+    (),
+    Some(()),
 );
 
 request_response!(
@@ -831,6 +845,8 @@ request_response!(
     DataProducerCloseRequest {
         internal: DataProducerInternal,
     },
+    (),
+    Some(()),
 );
 
 request_response!(
@@ -872,6 +888,8 @@ request_response!(
     DataConsumerCloseRequest {
         internal: DataConsumerInternal
     },
+    (),
+    Some(()),
 );
 
 request_response!(
@@ -933,6 +951,8 @@ request_response!(
     RtpObserverCloseRequest {
         internal: RtpObserverInternal,
     },
+    (),
+    Some(()),
 );
 
 request_response!(

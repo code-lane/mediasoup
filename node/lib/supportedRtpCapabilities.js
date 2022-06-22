@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.supportedRtpCapabilities = void 0;
 const supportedRtpCapabilities = {
     codecs: [
         {
@@ -206,7 +207,6 @@ const supportedRtpCapabilities = {
             mimeType: 'video/H264',
             clockRate: 90000,
             parameters: {
-                'packetization-mode': 1,
                 'level-asymmetry-allowed': 1
             },
             rtcpFeedback: [
@@ -219,26 +219,9 @@ const supportedRtpCapabilities = {
         },
         {
             kind: 'video',
-            mimeType: 'video/H264',
+            mimeType: 'video/H264-SVC',
             clockRate: 90000,
             parameters: {
-                'packetization-mode': 0,
-                'level-asymmetry-allowed': 1
-            },
-            rtcpFeedback: [
-                { type: 'nack' },
-                { type: 'nack', parameter: 'pli' },
-                { type: 'ccm', parameter: 'fir' },
-                { type: 'goog-remb' },
-                { type: 'transport-cc' }
-            ]
-        },
-        {
-            kind: 'video',
-            mimeType: 'video/H265',
-            clockRate: 90000,
-            parameters: {
-                'packetization-mode': 1,
                 'level-asymmetry-allowed': 1
             },
             rtcpFeedback: [
@@ -254,7 +237,6 @@ const supportedRtpCapabilities = {
             mimeType: 'video/H265',
             clockRate: 90000,
             parameters: {
-                'packetization-mode': 0,
                 'level-asymmetry-allowed': 1
             },
             rtcpFeedback: [
@@ -357,6 +339,20 @@ const supportedRtpCapabilities = {
             kind: 'video',
             uri: 'urn:ietf:params:rtp-hdrext:toffset',
             preferredId: 12,
+            preferredEncrypt: false,
+            direction: 'sendrecv'
+        },
+        {
+            kind: 'video',
+            uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
+            preferredId: 13,
+            preferredEncrypt: false,
+            direction: 'sendrecv'
+        },
+        {
+            kind: 'audio',
+            uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
+            preferredId: 13,
             preferredEncrypt: false,
             direction: 'sendrecv'
         }

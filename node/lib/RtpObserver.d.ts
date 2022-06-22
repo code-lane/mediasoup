@@ -2,13 +2,23 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
+export declare type RtpObserverEvents = {
+    routerclose: [];
+};
+export declare type RtpObserverObserverEvents = {
+    close: [];
+    pause: [];
+    resume: [];
+    addproducer: [Producer];
+    removeproducer: [Producer];
+};
 export declare type RtpObserverAddRemoveProducerOptions = {
     /**
      * The id of the Producer to be added or removed.
      */
     producerId: string;
 };
-export declare class RtpObserver extends EnhancedEventEmitter {
+export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents> extends EnhancedEventEmitter<E> {
     #private;
     protected readonly internal: {
         routerId: string;
@@ -27,7 +37,7 @@ export declare class RtpObserver extends EnhancedEventEmitter {
         internal: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
         getProducerById: (producerId: string) => Producer;
     });
     /**
@@ -45,11 +55,11 @@ export declare class RtpObserver extends EnhancedEventEmitter {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
@@ -59,7 +69,7 @@ export declare class RtpObserver extends EnhancedEventEmitter {
      * @emits addproducer - (producer: Producer)
      * @emits removeproducer - (producer: Producer)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>;
     /**
      * Close the RtpObserver.
      */

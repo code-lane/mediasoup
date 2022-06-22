@@ -28,7 +28,7 @@ export declare type ProducerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 /**
  * Valid types for 'trace' event.
@@ -113,7 +113,21 @@ export declare type ProducerStat = {
  * Producer type.
  */
 export declare type ProducerType = 'simple' | 'simulcast' | 'svc';
-export declare class Producer extends EnhancedEventEmitter {
+export declare type ProducerEvents = {
+    transportclose: [];
+    score: [ProducerScore[]];
+    videoorientationchange: [ProducerVideoOrientation];
+    trace: [ProducerTraceEventData];
+};
+export declare type ProducerObserverEvents = {
+    close: [];
+    pause: [];
+    resume: [];
+    score: [ProducerScore[]];
+    videoorientationchange: [ProducerVideoOrientation];
+    trace: [ProducerTraceEventData];
+};
+export declare class Producer extends EnhancedEventEmitter<ProducerEvents> {
     #private;
     /**
      * @private
@@ -128,7 +142,7 @@ export declare class Producer extends EnhancedEventEmitter {
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData?: any;
+        appData?: Record<string, unknown>;
         paused: boolean;
     });
     /**
@@ -168,11 +182,11 @@ export declare class Producer extends EnhancedEventEmitter {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
@@ -183,7 +197,7 @@ export declare class Producer extends EnhancedEventEmitter {
      * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
      * @emits trace - (trace: ProducerTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ProducerObserverEvents>;
     /**
      * @private
      * Just for testing purposes.

@@ -38,7 +38,7 @@ export type DataConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type DataConsumerStat =
@@ -57,9 +57,23 @@ export type DataConsumerStat =
  */
 export type DataConsumerType = 'sctp' | 'direct';
 
+export type DataConsumerEvents =
+{
+	transportclose: [];
+	dataproducerclose: [];
+	message: [Buffer, number];
+	sctpsendbufferfull: [];
+	bufferedamountlow: [number];
+}
+
+export type DataConsumerObserverEvents =
+{
+	close: [];
+}
+
 const logger = new Logger('DataConsumer');
 
-export class DataConsumer extends EnhancedEventEmitter
+export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -89,10 +103,10 @@ export class DataConsumer extends EnhancedEventEmitter
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<DataConsumerObserverEvents>();
 
 	/**
 	 * @private
@@ -117,7 +131,7 @@ export class DataConsumer extends EnhancedEventEmitter
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -129,7 +143,7 @@ export class DataConsumer extends EnhancedEventEmitter
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
 	}
@@ -193,7 +207,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -201,7 +215,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -211,7 +225,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	 *
 	 * @emits close
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>
 	{
 		return this.#observer;
 	}

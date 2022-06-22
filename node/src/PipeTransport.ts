@@ -6,6 +6,8 @@ import {
 	TransportListenIp,
 	TransportTuple,
 	TransportTraceEventData,
+	TransportEvents,
+	TransportObserverEvents,
 	SctpState
 } from './Transport';
 import { Consumer } from './Consumer';
@@ -64,7 +66,7 @@ export type PipeTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeTransportStat =
@@ -105,12 +107,23 @@ export type PipeConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
+}
+
+export type PipeTransportEvents = TransportEvents &
+{
+	sctpstatechange: [SctpState];
+}
+
+export type PipeTransportObserverEvents = TransportObserverEvents &
+{
+	sctpstatechange: [SctpState];
 }
 
 const logger = new Logger('PipeTransport');
 
-export class PipeTransport extends Transport
+export class PipeTransport
+	extends Transport<PipeTransportEvents, PipeTransportObserverEvents>
 {
 	// PipeTransport data.
 	readonly #data:
@@ -272,7 +285,7 @@ export class PipeTransport extends Transport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData = {} }: PipeConsumerOptions): Promise<Consumer>
+	async consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>
 	{
 		logger.debug('consume()');
 

@@ -40,6 +40,7 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
+		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) override;
 		uint32_t GetTransmissionRate(uint64_t nowMs) override;
 		float GetRtt() const override;
 
@@ -60,11 +61,11 @@ namespace RTC
 		// Allocated by this.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		// Others.
-		std::unordered_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapSsrcRtpStream;
+		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		absl::flat_hash_map<uint32_t, RTC::RtpStreamSend*> mapSsrcRtpStream;
 		bool keyFrameSupported{ false };
-		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
-		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		absl::flat_hash_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
+		absl::flat_hash_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
 	};
 } // namespace RTC
 

@@ -30,7 +30,7 @@ export type DataProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type DataProducerStat =
@@ -48,9 +48,19 @@ export type DataProducerStat =
  */
 export type DataProducerType = 'sctp' | 'direct';
 
+export type DataProducerEvents =
+{
+	transportclose: [];
+}
+
+export type DataProducerObserverEvents =
+{
+	close: [];
+}
+
 const logger = new Logger('DataProducer');
 
-export class DataProducer extends EnhancedEventEmitter
+export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -79,10 +89,10 @@ export class DataProducer extends EnhancedEventEmitter
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<DataProducerObserverEvents>();
 
 	/**
 	 * @private
@@ -102,7 +112,7 @@ export class DataProducer extends EnhancedEventEmitter
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -114,7 +124,7 @@ export class DataProducer extends EnhancedEventEmitter
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
 	}
@@ -170,7 +180,7 @@ export class DataProducer extends EnhancedEventEmitter
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -178,7 +188,7 @@ export class DataProducer extends EnhancedEventEmitter
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -188,7 +198,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 *
 	 * @emits close
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<DataProducerObserverEvents>
 	{
 		return this.#observer;
 	}

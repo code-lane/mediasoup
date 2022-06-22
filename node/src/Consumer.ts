@@ -58,7 +58,7 @@ export type ConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 /**
@@ -154,9 +154,31 @@ export type ConsumerStat =
  */
 export type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
 
+export type ConsumerEvents =
+{ 
+	transportclose: [];
+	producerclose: [];
+	producerpause: [];
+	producerresume: [];
+	score: [ConsumerScore];
+	layerschange: [ConsumerLayers?];
+	trace: [ConsumerTraceEventData];
+	rtp: [Buffer];
+}
+
+export type ConsumerObserverEvents =
+{
+	close: [];
+	pause: [];
+	resume: [];
+	score: [ConsumerScore];
+	layerschange: [ConsumerLayers?];
+	trace: [ConsumerTraceEventData];
+}
+
 const logger = new Logger('Consumer');
 
-export class Consumer extends EnhancedEventEmitter
+export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -185,7 +207,7 @@ export class Consumer extends EnhancedEventEmitter
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Paused flag.
 	#paused = false;
@@ -206,7 +228,7 @@ export class Consumer extends EnhancedEventEmitter
 	#currentLayers?: ConsumerLayers;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ConsumerObserverEvents>();
 
 	/**
 	 * @private
@@ -238,7 +260,7 @@ export class Consumer extends EnhancedEventEmitter
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: any;
+			appData?: Record<string, unknown>;
 			paused: boolean;
 			producerPaused: boolean;
 			score?: ConsumerScore;
@@ -253,7 +275,7 @@ export class Consumer extends EnhancedEventEmitter
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#paused = paused;
 		this.#producerPaused = producerPaused;
 		this.#score = score;
@@ -361,7 +383,7 @@ export class Consumer extends EnhancedEventEmitter
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -369,7 +391,7 @@ export class Consumer extends EnhancedEventEmitter
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -384,7 +406,7 @@ export class Consumer extends EnhancedEventEmitter
 	 * @emits layerschange - (layers: ConsumerLayers | undefined)
 	 * @emits trace - (trace: ConsumerTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ConsumerObserverEvents>
 	{
 		return this.#observer;
 	}

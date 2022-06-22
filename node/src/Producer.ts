@@ -35,7 +35,7 @@ export type ProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 /**
@@ -140,9 +140,27 @@ export type ProducerStat =
  */
 export type ProducerType = 'simple' | 'simulcast' | 'svc';
 
+export type ProducerEvents =
+{
+	transportclose: [];
+	score: [ProducerScore[]];
+	videoorientationchange: [ProducerVideoOrientation];
+	trace: [ProducerTraceEventData];
+}
+
+export type ProducerObserverEvents =
+{
+	close: [];
+	pause: [];
+	resume: [];
+	score: [ProducerScore[]];
+	videoorientationchange: [ProducerVideoOrientation];
+	trace: [ProducerTraceEventData];
+}
+
 const logger = new Logger('Producer');
 
-export class Producer extends EnhancedEventEmitter
+export class Producer extends EnhancedEventEmitter<ProducerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -171,7 +189,7 @@ export class Producer extends EnhancedEventEmitter
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Paused flag.
 	#paused = false;
@@ -180,7 +198,7 @@ export class Producer extends EnhancedEventEmitter
 	#score: ProducerScore[] = [];
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ProducerObserverEvents>();
 
 	/**
 	 * @private
@@ -204,7 +222,7 @@ export class Producer extends EnhancedEventEmitter
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: any;
+			appData?: Record<string, unknown>;
 			paused: boolean;
 		}
 	)
@@ -217,7 +235,7 @@ export class Producer extends EnhancedEventEmitter
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#paused = paused;
 
 		this.handleWorkerNotifications();
@@ -292,7 +310,7 @@ export class Producer extends EnhancedEventEmitter
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -300,7 +318,7 @@ export class Producer extends EnhancedEventEmitter
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -315,7 +333,7 @@ export class Producer extends EnhancedEventEmitter
 	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
 	 * @emits trace - (trace: ProducerTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ProducerObserverEvents>
 	{
 		return this.#observer;
 	}

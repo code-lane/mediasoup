@@ -10,6 +10,8 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtxStream.hpp"
 #include <nlohmann/json.hpp>
@@ -148,7 +150,7 @@ namespace RTC
 		}
 		uint32_t GetSenderReportTs() const
 		{
-			return this->lastSenderReporTs;
+			return this->lastSenderReportTs;
 		}
 		uint8_t GetScore() const
 		{
@@ -198,7 +200,7 @@ namespace RTC
 			0u
 		}; // Packets retransmitted at last interval for score calculation.
 		uint64_t lastSenderReportNtpMs{ 0u }; // NTP timestamp in last Sender Report (in ms).
-		uint32_t lastSenderReporTs{ 0u };     // RTP timestamp in last Sender Report.
+		uint32_t lastSenderReportTs{ 0u };    // RTP timestamp in last Sender Report.
 		float rtt{ 0 };
 		bool hasRtt{ false };
 		// Instance of RtxStream.

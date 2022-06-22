@@ -35,7 +35,7 @@ export declare type WorkerSettings = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
 /**
@@ -110,7 +110,14 @@ export declare type WorkerResourceUsage = {
      */
     ru_nivcsw: number;
 };
-export declare class Worker extends EnhancedEventEmitter {
+export declare type WorkerEvents = {
+    died: [Error];
+};
+export declare type WorkerObserverEvents = {
+    close: [];
+    newrouter: [Router];
+};
+export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     #private;
     /**
      * @private
@@ -128,20 +135,24 @@ export declare class Worker extends EnhancedEventEmitter {
      */
     get closed(): boolean;
     /**
+     * Whether the Worker died.
+     */
+    get died(): boolean;
+    /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
      * @emits close
      * @emits newrouter - (router: Router)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<WorkerObserverEvents>;
     /**
      * @private
      * Just for testing purposes.
@@ -167,6 +178,6 @@ export declare class Worker extends EnhancedEventEmitter {
      * Create a Router.
      */
     createRouter({ mediaCodecs, appData }?: RouterOptions): Promise<Router>;
-    private died;
+    private workerDied;
 }
 //# sourceMappingURL=Worker.d.ts.map

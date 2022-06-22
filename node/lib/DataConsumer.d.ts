@@ -32,7 +32,7 @@ export declare type DataConsumerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type DataConsumerStat = {
     type: string;
@@ -47,7 +47,17 @@ export declare type DataConsumerStat = {
  * DataConsumer type.
  */
 export declare type DataConsumerType = 'sctp' | 'direct';
-export declare class DataConsumer extends EnhancedEventEmitter {
+export declare type DataConsumerEvents = {
+    transportclose: [];
+    dataproducerclose: [];
+    message: [Buffer, number];
+    sctpsendbufferfull: [];
+    bufferedamountlow: [number];
+};
+export declare type DataConsumerObserverEvents = {
+    close: [];
+};
+export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents> {
     #private;
     /**
      * @private
@@ -64,7 +74,7 @@ export declare class DataConsumer extends EnhancedEventEmitter {
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
     });
     /**
      * DataConsumer id.
@@ -97,17 +107,17 @@ export declare class DataConsumer extends EnhancedEventEmitter {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
      * @emits close
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>;
     /**
      * Close the DataConsumer.
      */

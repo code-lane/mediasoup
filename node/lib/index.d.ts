@@ -9,12 +9,18 @@ export { types };
 /**
  * Expose mediasoup version.
  */
-export declare const version = "3.9.0";
+export declare const version = "3.9.17";
 /**
  * Expose parseScalabilityMode() function.
  */
 export { parse as parseScalabilityMode } from './scalabilityModes';
-declare const observer: EnhancedEventEmitter;
+declare const observer: EnhancedEventEmitter<{
+    [x: string]: any[];
+}, {
+    [x: string]: any[];
+} & {
+    [x: `@${string}`]: any[];
+}>;
 /**
  * Observer.
  *

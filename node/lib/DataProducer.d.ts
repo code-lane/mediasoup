@@ -24,7 +24,7 @@ export declare type DataProducerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type DataProducerStat = {
     type: string;
@@ -38,7 +38,13 @@ export declare type DataProducerStat = {
  * DataProducer type.
  */
 export declare type DataProducerType = 'sctp' | 'direct';
-export declare class DataProducer extends EnhancedEventEmitter {
+export declare type DataProducerEvents = {
+    transportclose: [];
+};
+export declare type DataProducerObserverEvents = {
+    close: [];
+};
+export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvents> {
     #private;
     /**
      * @private
@@ -50,7 +56,7 @@ export declare class DataProducer extends EnhancedEventEmitter {
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
     });
     /**
      * DataProducer id.
@@ -79,17 +85,17 @@ export declare class DataProducer extends EnhancedEventEmitter {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
      * @emits close
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<DataProducerObserverEvents>;
     /**
      * Close the DataProducer.
      */

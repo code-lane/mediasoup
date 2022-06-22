@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
@@ -45,7 +46,7 @@ export declare type ConsumerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 /**
  * Valid types for 'trace' event.
@@ -123,7 +124,25 @@ export declare type ConsumerStat = {
  * Consumer type.
  */
 export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
-export declare class Consumer extends EnhancedEventEmitter {
+export declare type ConsumerEvents = {
+    transportclose: [];
+    producerclose: [];
+    producerpause: [];
+    producerresume: [];
+    score: [ConsumerScore];
+    layerschange: [ConsumerLayers?];
+    trace: [ConsumerTraceEventData];
+    rtp: [Buffer];
+};
+export declare type ConsumerObserverEvents = {
+    close: [];
+    pause: [];
+    resume: [];
+    score: [ConsumerScore];
+    layerschange: [ConsumerLayers?];
+    trace: [ConsumerTraceEventData];
+};
+export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     #private;
     /**
      * @private
@@ -143,7 +162,7 @@ export declare class Consumer extends EnhancedEventEmitter {
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData?: any;
+        appData?: Record<string, unknown>;
         paused: boolean;
         producerPaused: boolean;
         score?: ConsumerScore;
@@ -200,11 +219,11 @@ export declare class Consumer extends EnhancedEventEmitter {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
@@ -215,7 +234,7 @@ export declare class Consumer extends EnhancedEventEmitter {
      * @emits layerschange - (layers: ConsumerLayers | undefined)
      * @emits trace - (trace: ConsumerTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ConsumerObserverEvents>;
     /**
      * @private
      * Just for testing purposes.

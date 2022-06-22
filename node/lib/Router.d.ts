@@ -1,7 +1,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
-import { TransportListenIp } from './Transport';
+import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
@@ -10,6 +10,7 @@ import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
 import { DataConsumer } from './DataConsumer';
+import { RtpObserver } from './RtpObserver';
 import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpeakerObserver';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
@@ -22,7 +23,7 @@ export declare type RouterOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeToRouterOptions = {
     /**
@@ -76,7 +77,18 @@ export declare type PipeToRouterResult = {
      */
     pipeDataProducer?: DataProducer;
 };
-export declare class Router extends EnhancedEventEmitter {
+declare type PipeTransportPair = {
+    [key: string]: PipeTransport;
+};
+export declare type RouterEvents = {
+    workerclose: [];
+};
+export declare type RouterObserverEvents = {
+    close: [];
+    newtransport: [Transport];
+    newrtpobserver: [RtpObserver];
+};
+export declare class Router extends EnhancedEventEmitter<RouterEvents> {
     #private;
     /**
      * @private
@@ -88,7 +100,7 @@ export declare class Router extends EnhancedEventEmitter {
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData?: any;
+        appData?: Record<string, unknown>;
     });
     /**
      * Router id.
@@ -105,11 +117,11 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
@@ -117,7 +129,7 @@ export declare class Router extends EnhancedEventEmitter {
      * @emits newtransport - (transport: Transport)
      * @emits newrtpobserver - (rtpObserver: RtpObserver)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<RouterObserverEvents>;
     /**
      * Close the Router.
      */
@@ -157,6 +169,10 @@ export declare class Router extends EnhancedEventEmitter {
      */
     pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }: PipeToRouterOptions): Promise<PipeToRouterResult>;
     /**
+     * @private
+     */
+    addPipeTransportPair(pipeTransportPairKey: string, pipeTransportPairPromise: Promise<PipeTransportPair>): void;
+    /**
      * Create an ActiveSpeakerObserver
      */
     createActiveSpeakerObserver({ interval, appData }?: ActiveSpeakerObserverOptions): Promise<ActiveSpeakerObserver>;
@@ -172,4 +188,5 @@ export declare class Router extends EnhancedEventEmitter {
         rtpCapabilities: RtpCapabilities;
     }): boolean;
 }
+export {};
 //# sourceMappingURL=Router.d.ts.map

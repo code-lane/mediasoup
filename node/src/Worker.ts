@@ -66,7 +66,7 @@ export type WorkerSettings =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
@@ -164,6 +164,17 @@ export type WorkerResourceUsage =
 	/* eslint-enable camelcase */
 }
 
+export type WorkerEvents = 
+{ 
+	died: [Error];
+}
+
+export type WorkerObserverEvents = 
+{
+	close: [];
+	newrouter: [Router];
+}
+
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -176,7 +187,7 @@ const workerBin = process.env.MEDIASOUP_WORKER_BIN
 const logger = new Logger('Worker');
 const workerLogger = new Logger('Worker');
 
-export class Worker extends EnhancedEventEmitter
+export class Worker extends EnhancedEventEmitter<WorkerEvents>
 {
 	// mediasoup-worker child process.
 	#child?: ChildProcess;
@@ -193,14 +204,17 @@ export class Worker extends EnhancedEventEmitter
 	// Closed flag.
 	#closed = false;
 
+	// Died dlag.
+	#died = false;
+
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Routers set.
 	readonly #routers: Set<Router> = new Set();
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<WorkerObserverEvents>();
 
 	/**
 	 * @private
@@ -309,7 +323,7 @@ export class Worker extends EnhancedEventEmitter
 				consumerSocket : this.#child.stdio[6]
 			});
 
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		let spawnDone = false;
 
@@ -360,7 +374,7 @@ export class Worker extends EnhancedEventEmitter
 					'worker process died unexpectedly [pid:%s, code:%s, signal:%s]',
 					this.#pid, code, signal);
 
-				this.died(
+				this.workerDied(
 					new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
 			}
 		});
@@ -384,7 +398,7 @@ export class Worker extends EnhancedEventEmitter
 				logger.error(
 					'worker process error [pid:%s]: %s', this.#pid, error.message);
 
-				this.died(error);
+				this.workerDied(error);
 			}
 		});
 
@@ -426,9 +440,17 @@ export class Worker extends EnhancedEventEmitter
 	}
 
 	/**
+	 * Whether the Worker died.
+	 */
+	get died(): boolean
+	{
+		return this.#died;
+	}
+
+	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -436,7 +458,7 @@ export class Worker extends EnhancedEventEmitter
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -447,7 +469,7 @@ export class Worker extends EnhancedEventEmitter
 	 * @emits close
 	 * @emits newrouter - (router: Router)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<WorkerObserverEvents>
 	{
 		return this.#observer;
 	}
@@ -545,7 +567,7 @@ export class Worker extends EnhancedEventEmitter
 	async createRouter(
 		{
 			mediaCodecs,
-			appData = {}
+			appData
 		}: RouterOptions = {}): Promise<Router>
 	{
 		logger.debug('createRouter()');
@@ -579,7 +601,7 @@ export class Worker extends EnhancedEventEmitter
 		return router;
 	}
 
-	private died(error: Error): void
+	private workerDied(error: Error): void
 	{
 		if (this.#closed)
 			return;
@@ -587,6 +609,7 @@ export class Worker extends EnhancedEventEmitter
 		logger.debug(`died() [error:${error}]`);
 
 		this.#closed = true;
+		this.#died = true;
 
 		// Close the Channel instance.
 		this.#channel.close();

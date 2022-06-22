@@ -4,6 +4,20 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
 
+export type RtpObserverEvents =
+{
+	routerclose: [];
+}
+
+export type RtpObserverObserverEvents =
+{
+	close: [];
+	pause: [];
+	resume: [];
+	addproducer: [Producer];
+	removeproducer: [Producer];
+}
+
 const logger = new Logger('RtpObserver');
 
 export type RtpObserverAddRemoveProducerOptions =
@@ -14,7 +28,8 @@ export type RtpObserverAddRemoveProducerOptions =
 	producerId: string;
 }
 
-export class RtpObserver extends EnhancedEventEmitter
+export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
+	extends EnhancedEventEmitter<E>
 {
 	// Internal data.
 	protected readonly internal:
@@ -36,13 +51,13 @@ export class RtpObserver extends EnhancedEventEmitter
 	#paused = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Method to retrieve a Producer.
 	protected readonly getProducerById: (producerId: string) => Producer;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<RtpObserverObserverEvents>();
 
 	/**
 	 * @private
@@ -62,7 +77,7 @@ export class RtpObserver extends EnhancedEventEmitter
 			internal: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 			getProducerById: (producerId: string) => Producer;
 		}
 	)
@@ -74,7 +89,7 @@ export class RtpObserver extends EnhancedEventEmitter
 		this.internal = internal;
 		this.channel = channel;
 		this.payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.getProducerById = getProducerById;
 	}
 
@@ -105,7 +120,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -113,7 +128,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -127,7 +142,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	 * @emits addproducer - (producer: Producer)
 	 * @emits removeproducer - (producer: Producer)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>
 	{
 		return this.#observer;
 	}

@@ -81,9 +81,27 @@ export interface TransportTraceEventData
 
 export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
+export type TransportEvents = 
+{ 
+	routerclose: []; 
+	trace: [TransportTraceEventData];
+}
+
+export type TransportObserverEvents =
+{
+	close: [];
+	newproducer: [Producer];
+	newconsumer: [Consumer];
+	newdataproducer: [DataProducer];
+	newdataconsumer: [DataConsumer];
+	trace: [TransportTraceEventData];
+}
+
 const logger = new Logger('Transport');
 
-export class Transport extends EnhancedEventEmitter
+export class Transport<Events extends TransportEvents = TransportEvents,
+	ObserverEvents extends TransportObserverEvents = TransportObserverEvents>
+	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
 	protected readonly internal:
@@ -109,7 +127,7 @@ export class Transport extends EnhancedEventEmitter
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Method to retrieve Router RTP capabilities.
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
@@ -145,7 +163,7 @@ export class Transport extends EnhancedEventEmitter
 	#nextSctpStreamId = 0;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ObserverEvents>();
 
 	/**
 	 * @private
@@ -173,7 +191,7 @@ export class Transport extends EnhancedEventEmitter
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 			getRouterRtpCapabilities: () => RtpCapabilities;
 			getProducerById: (producerId: string) => Producer;
 			getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -188,7 +206,7 @@ export class Transport extends EnhancedEventEmitter
 		this.#data = data;
 		this.channel = channel;
 		this.payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -213,7 +231,7 @@ export class Transport extends EnhancedEventEmitter
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -221,7 +239,7 @@ export class Transport extends EnhancedEventEmitter
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -235,7 +253,7 @@ export class Transport extends EnhancedEventEmitter
 	 * @emits newdataproducer - (dataProducer: DataProducer)
 	 * @emits newdataconsumer - (dataProducer: DataProducer)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{
 		return this.#observer;
 	}
@@ -436,7 +454,7 @@ export class Transport extends EnhancedEventEmitter
 			rtpParameters,
 			paused = false,
 			keyFrameRequestDelay,
-			appData = {}
+			appData
 		}: ProducerOptions
 	): Promise<Producer>
 	{
@@ -546,7 +564,7 @@ export class Transport extends EnhancedEventEmitter
 			mid,
 			preferredLayers,
 			pipe = false,
-			appData = {}
+			appData
 		}: ConsumerOptions
 	): Promise<Consumer>
 	{
@@ -646,7 +664,7 @@ export class Transport extends EnhancedEventEmitter
 			sctpStreamParameters,
 			label = '',
 			protocol = '',
-			appData = {}
+			appData
 		}: DataProducerOptions = {}
 	): Promise<DataProducer>
 	{
@@ -724,7 +742,7 @@ export class Transport extends EnhancedEventEmitter
 			ordered,
 			maxPacketLifeTime,
 			maxRetransmits,
-			appData = {}
+			appData
 		}: DataConsumerOptions
 	): Promise<DataConsumer>
 	{

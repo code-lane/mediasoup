@@ -54,7 +54,19 @@ export interface TransportTraceEventData {
     info: any;
 }
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
-export declare class Transport extends EnhancedEventEmitter {
+export declare type TransportEvents = {
+    routerclose: [];
+    trace: [TransportTraceEventData];
+};
+export declare type TransportObserverEvents = {
+    close: [];
+    newproducer: [Producer];
+    newconsumer: [Consumer];
+    newdataproducer: [DataProducer];
+    newdataconsumer: [DataConsumer];
+    trace: [TransportTraceEventData];
+};
+export declare class Transport<Events extends TransportEvents = TransportEvents, ObserverEvents extends TransportObserverEvents = TransportObserverEvents> extends EnhancedEventEmitter<Events> {
     #private;
     protected readonly internal: {
         routerId: string;
@@ -82,7 +94,7 @@ export declare class Transport extends EnhancedEventEmitter {
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
         getRouterRtpCapabilities: () => RtpCapabilities;
         getProducerById: (producerId: string) => Producer;
         getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -98,11 +110,11 @@ export declare class Transport extends EnhancedEventEmitter {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
@@ -112,7 +124,7 @@ export declare class Transport extends EnhancedEventEmitter {
      * @emits newdataproducer - (dataProducer: DataProducer)
      * @emits newdataconsumer - (dataProducer: DataProducer)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
      * @private
      * Just for testing purposes.
